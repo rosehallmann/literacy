@@ -1,0 +1,63 @@
+---
+title: "Litteracy Study"
+author: "Rose Hallmann"
+
+output:
+  word_document: default
+  html_document: default
+---
+At first I read the package Tidyverse, because it will help me when I later on will use and transform the data. Without it the coding i will be using won't have any effect.
+
+```{r}
+library(tidyverse)
+```
+
+I use the read_csv from the readr-package to import my data set.
+
+```{r}
+literacy <- read_csv("./Data/literacy_project.csv")
+```
+In order to be able to make a map I will be using the packages RColorBrewe and rworldmap, so I install these packages.
+It's important that I not only install, but also read the package by using library(RColorBrewer) and library(rworldmap). 
+
+```{r}
+library(RColorBrewer)
+library(rworldmap)
+```
+
+After installing and reading the packages I can start the actual work of making the map.
+The first thing I do is to aggregate literacy. This leaves me with only the two variables I need; this being "Countries" and "Total_Youth" which will be my new literacy data.
+By using FUN=sum I summerize the function of "Total_Youth".
+The name of my summarized "Total_Youth" column now changes into x, which becomes the name of the map. This I change by saying that "x" is now "Literacy among 15-24 year olds".  
+
+```{r}
+literacy <- aggregate(literacy$Total_Youth, by=list(Country=literacy$Country), FUN=sum)
+colnames(literacy)[colnames(literacy)=="x"] <- "Literacy among 15-24 year olds"
+```
+
+Now I have to link the aggregation to an actual map. This is where the package "rworldmap" comes into play. I use the function joinCountryData2Map and link it with my aggregated literacy dataset. I use joinCode = "NAME", since the countries are referred to by name in my data set and nameJoinColumn lets it know, that it is the column "Country" that I am referring to.
+All of the code I put under "WorldMapLiteracy"
+
+```{r}
+WorldMapLiteracy <- joinCountryData2Map(literacy, 
+                                         joinCode="NAME",
+                                         nameJoinColumn= "Country")
+```
+
+These results are not perfect, but they are quite good. It will probaby not matter 7 codes of my data is missing, since a lot of the data doesn't have any data. 
+
+Next up I choose a colourpalette for my map, since I want the different percentages to be visible. I use the colourpalette Spectral in this case and name my colourpalette "colourPalette" to simplify my next piece of code. To be able to use this colour palette I need the package "RColorBrewer" since it is a part thereof.
+
+```{r}
+colourPalette <- RColorBrewer::brewer.pal(10,'Spectral')
+```
+
+The next step is actually plotting it all together and creating the actual map. To do this I have to use another "rworldmap" function which is "mapCountryData". To plot it I have to first plot my "map data" into the function, which in this case is "WorldMapLiteracy". 
+After this I have to apply the name of the column I am plotting ("Literacy among 15-24 year olds").
+Thereafter I just have to apply the fixed width, the colourpalette (that I already created) and lastly the number of categories. Here I apply 10, meaning that the percentages will be put into categories of 10. This makes it very clear, what countries have a low literacy rate and what countries have N/A. After putting all this into the function I have my final product.
+```{r}
+mapCountryData(WorldMapLiteracy, 
+               nameColumnToPlot = "Literacy among 15-24 year olds",
+               catMethod = "fixedWidth",
+               colourPalette = "colourPalette",
+               numCats = 10)
